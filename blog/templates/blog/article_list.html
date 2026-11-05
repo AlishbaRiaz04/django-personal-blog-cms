@@ -1,0 +1,26 @@
+<h1>Published Articles</h1>
+
+{% for article in articles %}
+    <article>
+        <h2>{{ article.title }}</h2>
+        <p>{{ article.content }}</p>
+    </article>
+{% empty %}
+    <p>No published articles yet</p>
+{% endfor %}
+
+{% if is_paginated %}
+    <div>
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span>
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+    </div>
+{% endif %}
