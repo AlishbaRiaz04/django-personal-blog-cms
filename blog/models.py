@@ -130,3 +130,16 @@ class Subscription(models.Model):
         ]
     def __str__(self):
         return f"{self.user} subscribes to {self.author}"
+
+class NotificationEvent(models.Model):
+    article=models.OneToOneField(
+        "Article",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="notification_event",
+
+    )
+    article_title=models.CharField(max_length=200)
+    created_at=models.DateTimeField(auto_now_add=True)
+
