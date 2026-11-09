@@ -1,7 +1,13 @@
+from tkinter.constants import CASCADE
+
 from django.db import models
+from django.db.models import SET_NULL
+from django.db.models.fields import TextField, CharField
 from django.utils.text import slugify
 from django.conf import settings
 from taggit.managers import TaggableManager
+
+
 
 
 class Article(models.Model):
@@ -15,19 +21,19 @@ class Article(models.Model):
     status=models.CharField(
         max_length=20,
         choices = Status.choices,
-        default=Status.DRAFT
+        default=Status.DRAFT,
     )
     author=models.ForeignKey(
         "AuthorProfile",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="articles"
+        related_name="articles",
     )
     categories = models.ManyToManyField(
         "Category",
         blank=True,
-        related_name="articles"
+        related_name="articles",
     )
 
     created_at= models.DateTimeField(auto_now_add=True)
@@ -71,3 +77,35 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+class Comment(models.Model):
+    class ModerationStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    article=models.ForeignKey(
+        "Article",
+        on_delete=models.CASCADE,
+        related_name="comments",
+
+    )
+    user=models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="comments",
+    )
+    content=models.TextField()
+    moderation_status=models.CharField(
+        max_length=20,
+        choices=ModerationStatus.choices,
+        default=ModerationStatus.PENDING,
+    )
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        username = self.user.username if self.user else "Anonymous"
+        return f"Comment on '{self.article.title}' by {username}"
