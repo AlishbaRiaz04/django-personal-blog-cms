@@ -1,7 +1,7 @@
 from tkinter.constants import CASCADE
 
 from django.db import models
-from django.db.models import SET_NULL
+from django.db.models import SET_NULL, PROTECT
 from django.db.models.fields import TextField, CharField
 from django.utils.text import slugify
 from django.conf import settings
@@ -143,3 +143,47 @@ class NotificationEvent(models.Model):
     article_title=models.CharField(max_length=200)
     created_at=models.DateTimeField(auto_now_add=True)
 
+class NotificationDelivery(models.Model):
+    class Status(models.TextChoices):
+        PENDING="pending", "Pending"
+        SENT="sent", "Sent"
+        FAILED="failed", "Failed"
+
+    event=models.ForeignKey(
+        "NotificationEvent",
+        on_delete=models.PROTECT,
+        related_name="deliveries",
+    )
+    user=models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="notification_deliveries",
+    )
+    recipient_email=models.EmailField()
+    status=models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    attempt_count=models.PositiveIntegerField(default=0)
+
+    sent_at=models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    last_attempt_at=models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    class Meta:
+        constraints=[
+            models.UniqueConstraint(
+                fields=["event", "recipient_email"],
+                name="unique_event_recipient_delivery",
+            )
+        ]
+    last_error=models.TextField(blank=True)
+    def __str__(self):
+        return f"Delivery to {self.recipient_email}"
