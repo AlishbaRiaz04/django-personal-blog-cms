@@ -109,3 +109,24 @@ class Comment(models.Model):
     def __str__(self):
         username = self.user.username if self.user else "Anonymous"
         return f"Comment on '{self.article.title}' by {username}"
+
+class Subscription(models.Model):
+    user=models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="subscriptions",
+    )
+    author=models.ForeignKey(
+        "AuthorProfile",
+        on_delete=models.CASCADE,
+        related_name="subscriptions"
+    )
+    class Meta:
+        constraints=[
+            models.UniqueConstraint(
+                fields=["user", "author"],
+                name="unique_user_author_subscription",
+            )
+        ]
+    def __str__(self):
+        return f"{self.user} subscribes to {self.author}"
