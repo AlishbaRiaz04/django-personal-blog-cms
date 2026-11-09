@@ -6,6 +6,7 @@ from django.db.models.fields import TextField, CharField
 from django.utils.text import slugify
 from django.conf import settings
 from taggit.managers import TaggableManager
+from django.db.models import Q
 
 
 
@@ -187,3 +188,39 @@ class NotificationDelivery(models.Model):
     last_error=models.TextField(blank=True)
     def __str__(self):
         return f"Delivery to {self.recipient_email}"
+
+class PageView(models.Model):
+    class PageType(models.TextChoices):
+        HOMEPAGE= "homepage", "Homepage"
+        ARTICLE= "article", "Article"
+        CATEGORY= "category", "Category"
+        Author_PROFILE="author_profile", "Author_Profile"
+    visitor_id=models.CharField(
+        max_length=64,
+    )
+    article=models.ForeignKey(
+        "Article",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="page_views",
+    )
+    page_type=models.CharField(
+        max_length=20,
+        choices=PageType.choices,
+    )
+    viewed_at=models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                        Q(page_type="article", article__isnull=False)
+                        | Q(
+                    page_type__in=["homepage", "category", "author_profile"],
+                    article__isnull=True,
+                )
+                ),
+                name="valid_pageview_article_relationship",
+            )
+        ]
