@@ -1,0 +1,31 @@
+<h1>Comment Moderation</h1>
+
+{% for comment in comments %}
+    <div>
+        <h3>{{ comment.article.title }}</h3>
+
+        <p>{{ comment.content }}</p>
+
+        <small>
+            Submitted by:
+            {% if comment.user %}
+                {{ comment.user.username }}
+            {% else %}
+                Anonymous
+            {% endif %}
+        </small>
+
+        <p>
+            Submitted on: {{ comment.created_at }}
+        </p>
+
+        <p>
+            Status: {{ comment.get_moderation_status_display }}
+        </p>
+    </div>
+
+    <hr>
+
+{% empty %}
+    <p>No pending comments to moderate.</p>
+{% endfor %}

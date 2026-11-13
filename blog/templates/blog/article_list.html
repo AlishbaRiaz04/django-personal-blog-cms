@@ -2,8 +2,12 @@
 
 {% for article in articles %}
     <article>
-        <h2>{{ article.title }}</h2>
-        <p>{{ article.content }}</p>
+        <h2>
+        <a href="{% url 'article_detail' slug=article.slug %}">
+        {{ article.title }}
+    </a>
+</h2>
+        <p>{{ article.content|safe }}</p>
     </article>
 {% empty %}
     <p>No published articles yet</p>

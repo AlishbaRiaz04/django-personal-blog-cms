@@ -1,0 +1,50 @@
+
+<h1>{{ article.title }}</h1>
+
+<p>Published on: {{ article.published_at }}</p>
+
+<p>Author: {{ article.author }}</p>
+
+<div>
+    {{ article.content|safe }}
+</div>
+
+{% if user.is_authenticated and article.author and article.author.user_id == user.id %}
+    <a href="{% url 'article_update' slug=article.slug %}">
+        Edit Article
+    </a>
+{% endif %}
+
+<hr>
+<h2>Comments</h2>
+{% for comment in approved_comments %}
+    <div>
+        <p>{{ comment.content }}</p>
+
+        <small>
+            {% if comment.user %}
+                {{ comment.user.username }}
+            {% else %}
+                Anonymous
+            {% endif %}
+            . {{ comment.created_at }}
+        </small>
+    </div>
+{% empty %}
+    <p>No comments yet.</p>
+{% endfor %}
+
+<hr>
+
+{% if user.is_authenticated %}
+    <h3>Leave a comment</h3>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ comment_form.as_p }}
+
+        <button type="submit">Submit comment</button>
+    </form>
+{% else %}
+    <p>Log in to leave a comment.</p>
+{% endif %}

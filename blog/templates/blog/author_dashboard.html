@@ -1,0 +1,36 @@
+<h1>My Articles</h1>
+
+<nav>
+    <a href="{% url 'author_dashboard' %}">All</a>
+
+    {% for value, label in status_choices %}
+        <a href="{% url 'author_dashboard' %}?status={{ value }}">
+            {{ label }}
+        </a>
+    {% endfor %}
+</nav>
+
+{% for article in articles %}
+    <article>
+        <h2>{{ article.title }}</h2>
+
+        <p>Status: {{ article.get_status_display }}</p>
+        <p>Last updated: {{ article.updated_at }}</p>
+
+        <a href="{% url 'article_update' slug=article.slug %}">
+            Edit Article
+        </a>
+
+        <a href="{% url 'article_delete' slug=article.slug %}">
+            Delete Article
+        </a>
+
+        {% if article.status == "published" %}
+            <a href="{% url 'article_detail' slug=article.slug %}">
+                View Article
+            </a>
+        {% endif %}
+    </article>
+{% empty %}
+    <p>You haven't created any articles yet.</p>
+{% endfor %}
