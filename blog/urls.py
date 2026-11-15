@@ -40,5 +40,15 @@ urlpatterns=[
         "comments/<int:comment_id>/<str:action>/",
         moderate_comment,
         name="moderate_comment",
-    )
+    ),
+    path(
+        "article/<slug:slug>/subscribe/",
+        views.subscribe_to_author,
+        name="subscribe_to_author",
+    ),
+    path(
+        "article/<slug:slug>/unsubscribe/",
+        views.unsubscribe_from_author,
+        name="unsubscribe_from_author",
+    ),
 ]

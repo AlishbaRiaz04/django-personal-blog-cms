@@ -5,6 +5,25 @@
 
 <p>Author: {{ article.author }}</p>
 
+{% if user.is_authenticated and article.author %}
+    {% if article.author.user_id != user.id %}
+        {% if is_subscribed %}
+            <form method="post" action="{% url 'unsubscribe_from_author' slug=article.slug %}">
+                {% csrf_token %}
+                <button type="submit">Unsubscribe</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'subscribe_to_author' slug=article.slug %}">
+                {% csrf_token %}
+                <button type="submit">Subscribe</button>
+            </form>
+        {% endif %}
+    {% endif %}
+{% else %}
+    {% if not user.is_authenticated %}
+        <p>Log in to subscribe to this author.</p>
+    {% endif %}
+{% endif %}
 <div>
     {{ article.content|safe }}
 </div>

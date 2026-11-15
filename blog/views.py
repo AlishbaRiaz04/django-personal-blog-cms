@@ -12,7 +12,7 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render, get_object_or_404
 
 from .forms import ArticleForm, CommentForm
-from .models import Article, AuthorProfile,  Comment
+from .models import Article, AuthorProfile,  Comment, Subscription
 
 
 class ArticleListView(ListView):
@@ -100,6 +100,15 @@ class ArticleDetailView(DetailView):
         context["approved_comments"] = self.object.comments.filter(
             moderation_status=Comment.ModerationStatus.APPROVED
         ).order_by("created_at")
+
+        context['is_subscribed']=False
+
+        if self.request.user.is_authenticated and self.object.author:
+            context["is_subscribed"] = Subscription.objects.filter(
+                user=self.request.user,
+                author=self.object.author
+            ).exists()
+
         return context
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -219,3 +228,35 @@ def moderate_comment(request, comment_id, action):
 
     comment.save(update_fields=["moderation_status", "updated_at"])
     return redirect("comment_moderation")
+
+@login_required
+@require_POST
+def subscribe_to_author(request, slug):
+    article=get_object_or_404(
+        Article,
+        slug=slug,
+        status=Article.Status.PUBLISHED,
+    )
+
+    if article.author and article.author.user_id != request.user.id:
+        Subscription.objects.get_or_create(
+            user=request.user,
+            author=article.author,
+        )
+
+    return redirect("article_detail", slug=article.slug)
+@login_required
+@require_POST
+def unsubscribe_from_author(request, slug):
+    article=get_object_or_404(
+        Article,
+        slug=slug,
+        status=Article.Status.PUBLISHED,
+    )
+
+    if article.author and article.author.user_id != request.user.id:
+        Subscription.objects.filter(
+            user=request.user,
+            author=article.author,
+        ).delete()
+    return redirect("article_detail", slug=article.slug)
