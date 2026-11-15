@@ -22,9 +22,20 @@
         <p>
             Status: {{ comment.get_moderation_status_display }}
         </p>
+        <form method="post" action="{% url 'moderate_comment' comment.id 'approve' %}">
+            {% csrf_token %}
+            <button type="submit">Approve</button>
+        </form>
+
+        <form method="post" action="{% url 'moderate_comment' comment.id 'reject' %}">
+            {% csrf_token %}
+            <button type="submit">Reject</button>
+        </form>
+
     </div>
 
     <hr>
+
 
 {% empty %}
     <p>No pending comments to moderate.</p>

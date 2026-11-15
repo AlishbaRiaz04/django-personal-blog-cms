@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from .views import CommentModerationView
+from .views import moderate_comment
 
 urlpatterns=[
     path('', views.ArticleListView.as_view(), name='home'),
@@ -35,4 +36,9 @@ urlpatterns=[
         CommentModerationView.as_view(),
         name="comment_moderation",
     ),
+    path(
+        "comments/<int:comment_id>/<str:action>/",
+        moderate_comment,
+        name="moderate_comment",
+    )
 ]

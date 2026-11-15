@@ -1,13 +1,15 @@
 
+
 from django.contrib.auth.views import redirect_to_login
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import CreateView
+from django.core.exceptions import PermissionDenied
 from django.utils import timezone
-from django.views.generic import DetailView, UpdateView, ListView, DeleteView
+from django.views.decorators.http import require_POST
+from django.views.generic import CreateView, DetailView, UpdateView, ListView, DeleteView
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseBadRequest
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render, get_object_or_404
 
 from .forms import ArticleForm, CommentForm
 from .models import Article, AuthorProfile,  Comment
@@ -195,3 +197,25 @@ class CommentModerationView(LoginRequiredMixin, ListView):
         return queryset.filter(
             article__author__user=self.request.user
         )
+@login_required
+@require_POST
+def moderate_comment(request, comment_id, action):
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    if not request.user.is_staff:
+        if (
+            comment.article.author is None
+            or comment.article.author.user_id != request.user.id
+        ):
+            raise PermissionDenied
+
+    if action == "approve":
+        comment.moderation_status = Comment.ModerationStatus.APPROVED
+
+    elif action == "reject":
+        comment.moderation_status = Comment.ModerationStatus.REJECTED
+    else:
+        raise PermissionDenied
+
+    comment.save(update_fields=["moderation_status", "updated_at"])
+    return redirect("comment_moderation")
