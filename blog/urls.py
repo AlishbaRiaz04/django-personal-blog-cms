@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from .views import CommentModerationView
 from .views import moderate_comment
+from .feeds import LatestArticlesFeed, LatestArticlesAtomFeed
 
 urlpatterns=[
     path('', views.ArticleListView.as_view(), name='home'),
@@ -50,5 +51,15 @@ urlpatterns=[
         "article/<slug:slug>/unsubscribe/",
         views.unsubscribe_from_author,
         name="unsubscribe_from_author",
+    ),
+    path(
+        "feeds/rss/",
+        LatestArticlesFeed(),
+        name="rss_feed",
+    ),
+    path(
+        "feeds/atom/",
+        LatestArticlesAtomFeed(),
+        name="atom_feed",
     ),
 ]
