@@ -1,13 +1,9 @@
-from tkinter.constants import CASCADE
-
 from django.db import models
-from django.db.models import SET_NULL, PROTECT
-from django.db.models.fields import TextField, CharField
 from django.utils.text import slugify
 from django.conf import settings
-from taggit.managers import TaggableManager
 from django.db.models import Q
 
+from taggit.managers import TaggableManager
 
 class Article(models.Model):
     class Status(models.TextChoices):
