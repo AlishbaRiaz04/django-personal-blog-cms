@@ -9,8 +9,6 @@ from taggit.managers import TaggableManager
 from django.db.models import Q
 
 
-
-
 class Article(models.Model):
     class Status(models.TextChoices):
         DRAFT="draft", "Draft"

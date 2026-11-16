@@ -1,6 +1,10 @@
 
 from django.db import transaction
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
+from datetime import timedelta
+from django.db.models import Q
 
 from .models import (
     Article,
@@ -53,7 +57,7 @@ def publish_due_articles():
                 "updated_at",
             ])
 
-            event, created = NotificationEvent.objects.get_or_create(
+            event, _ = NotificationEvent.objects.get_or_create(
                 article=article,
                 defaults={
                     "article_title": article.title,
@@ -83,3 +87,80 @@ def publish_due_articles():
             published_count += 1
 
     return published_count
+
+def send_notification_email(delivery):
+    current_time=timezone.now()
+
+    if delivery.status==NotificationDelivery.Status.SENT:
+        return delivery.status
+    if delivery.attempt_count>=3:
+        return delivery.status
+
+    if (
+        delivery.status == NotificationDelivery.Status.FAILED
+        and delivery.last_attempt_at is not None
+        and delivery.last_attempt_at> current_time -timedelta(minutes=5)
+    ):
+        return delivery.status
+    subject=f"new article: {delivery.event.article_title}"
+
+    message=(
+        f"A new article has been published!\n\n"
+        f"Title: {delivery.event.article_title}\n\n"
+        "Visit the blog to read it."
+    )
+    try:
+        sent_count=send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[delivery.recipient_email],
+            fail_silently=False,
+        )
+        if sent_count !=1:
+            raise RuntimeError("Email backend did not confirm delivery.")
+        delivery.status=NotificationDelivery.Status.SENT
+        delivery.sent_at=timezone.now()
+        delivery.last_error=""
+
+    except Exception as error:
+        delivery.status=NotificationDelivery.Status.FAILED
+        delivery.last_error=str(error)
+        delivery.sent_at=None
+    finally:
+        delivery.attempt_count+=1
+        delivery.last_attempt_at=timezone.now()
+        delivery.save(update_fields=[
+            "status",
+            "sent_at",
+            "last_error",
+            "attempt_count",
+            "last_attempt_at",
+        ])
+
+    return delivery.status
+
+def process_pending_notifications():
+    retry_time=timezone.now() - timedelta(minutes=5)
+
+    deliveries=NotificationDelivery.objects.filter(
+        attempt_count__lt=3
+    ).filter(
+        Q(status=NotificationDelivery.Status.PENDING)
+        | Q(
+            status=NotificationDelivery.Status.FAILED,
+            last_attempt_at__lte=retry_time,
+        )
+        | Q(
+            status=NotificationDelivery.Status.FAILED,
+            last_attempt_at__isnull=True,
+        )
+    ).order_by("id")
+    eligible_deliveries=list(deliveries)
+    processed_count=0
+
+    for delivery in eligible_deliveries:
+        send_notification_email(delivery)
+        processed_count+=1
+
+    return processed_count
