@@ -1,22 +1,107 @@
-<h1>Published Articles</h1>
 
-{% for article in articles %}
-    <article>
-        <h2>
-        <a href="{% url 'article_detail' slug=article.slug %}">
-        {{ article.title }}
-    </a>
-</h2>
-        <p>{{ article.content|safe }}</p>
-    </article>
-{% empty %}
-    <p>No published articles yet</p>
-{% endfor %}
+{% extends "blog/base.html" %}
 
-{% if is_paginated %}
-    <div>
+{% block title %}Home | My Blog{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <p class="eyebrow">THE BLOG</p>
+    <h1>Ideas, stories &amp; perspectives.</h1>
+    <p class="hero-description">
+        Explore the latest articles and thoughts from our writers.
+    </p>
+</section>
+
+<section class="browse-filters">
+    <h2>Browse by category</h2>
+
+    <div class="filter-nav">
+        <a href="{% url 'home' %}" class="filter-link">All</a>
+
+        {% for category in categories %}
+            <a href="?category={{ category.id }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}"
+               class="filter-link">
+                {{ category.name }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <h2>Browse by tag</h2>
+
+    <div class="filter-nav">
+        {% for tag in tags %}
+            <a href="?tag={{ tag.slug }}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+               class="filter-link">
+                {{ tag.name }}
+            </a>
+        {% empty %}
+            <p>No tags available yet.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="articles-section">
+    <div class="section-heading">
+        <h2>Latest Articles</h2>
+        <span>Explore our latest stories</span>
+    </div>
+
+    <div class="article-grid">
+        {% for article in articles %}
+            <article class="article-card">
+                {% if article.categories.exists %}
+                    <div class="article-categories">
+                        {% for category in article.categories.all %}
+                            <span class="category-label">
+                                {{ category.name }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% if article.tags.all %}
+                    <div class="article-tags">
+                        <span>Tags:</span>
+
+                        {% for tag in article.tags.all %}
+                            <span class="tag-label">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <h3>
+                    <a href="{% url 'article_detail' slug=article.slug %}">
+                        {{ article.title }}
+                    </a>
+                </h3>
+
+                <p class="article-excerpt">
+                    {{ article.content|striptags|truncatewords:25 }}
+                </p>
+
+                <a
+                    class="read-more"
+                    href="{% url 'article_detail' slug=article.slug %}"
+                >
+                    Read article →
+                </a>
+            </article>
+        {% empty %}
+            <div class="empty-state">
+                <h3>No published articles yet</h3>
+                <p>Check back later for new stories.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav class="pagination">
+
         {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}">
+                ← Previous
+            </a>
         {% endif %}
 
         <span>
@@ -24,7 +109,13 @@
         </span>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a href="?page={{ page_obj.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}">
+                Next →
+            </a>
         {% endif %}
-    </div>
+
+    </nav>
 {% endif %}
+
+{% endblock %}
+</section>

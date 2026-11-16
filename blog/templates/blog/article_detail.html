@@ -5,6 +5,30 @@
 
 <p>Author: {{ article.author }}</p>
 
+{% if article.categories.all %}
+    <div class="article-categories">
+        {% for category in article.categories.all %}
+            <a href="{% url 'home' %}?category={{ category.id }}"
+               class="category-label">
+                {{ category.name }}
+            </a>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if article.tags.all %}
+    <div class="article-tags">
+        <span>Tags:</span>
+
+        {% for tag in article.tags.all %}
+            <a href="{% url 'home' %}?tag={{ tag.slug }}"
+               class="tag-label">
+                {{ tag.name }}
+            </a>
+        {% endfor %}
+    </div>
+{% endif %}
+
 {% if user.is_authenticated and article.author %}
     {% if article.author.user_id != user.id %}
         {% if is_subscribed %}

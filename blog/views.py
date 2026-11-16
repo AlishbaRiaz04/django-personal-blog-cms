@@ -12,20 +12,41 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render, get_object_or_404
 
 from .forms import ArticleForm, CommentForm
-from .models import Article, AuthorProfile,  Comment, Subscription
-
+from .models import Article, AuthorProfile,  Comment, Subscription, Category
+from taggit.models import Tag
 
 class ArticleListView(ListView):
-    model=Article
+    model = Article
     template_name = "blog/article_list.html"
     context_object_name = "articles"
     paginate_by = 10
 
     def get_queryset(self):
-        return Article.objects.filter(
-            status=Article.Status.PUBLISHED
-        ).order_by("-created_at", "title")
+        queryset = Article.objects.filter(
+            status=Article.Status.PUBLISHED,
+            published_at__isnull=False,
+        )
 
+        category_id = self.request.GET.get("category")
+        tag_slug = self.request.GET.get("tag")
+
+        if category_id and category_id.isdigit():
+            queryset = queryset.filter(categories__id=category_id)
+
+        if tag_slug:
+            queryset = queryset.filter(tags__slug=tag_slug)
+
+        return queryset.distinct().order_by("-published_at", "title")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["categories"] = Category.objects.all()
+        context["selected_category"] = self.request.GET.get("category", "")
+        context["selected_tag"] = self.request.GET.get("tag", "")
+        context["tags"] = Tag.objects.all()
+
+        return context
 class ArticleCreateView(LoginRequiredMixin, CreateView):
     model= Article
     form_class=ArticleForm

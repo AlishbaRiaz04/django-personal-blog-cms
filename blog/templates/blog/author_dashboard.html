@@ -1,36 +1,81 @@
-<h1>My Articles</h1>
+{% extends "blog/base.html" %}
 
-<nav>
-    <a href="{% url 'author_dashboard' %}">All</a>
+{% block title %}My Articles | My Blog{% endblock %}
 
-    {% for value, label in status_choices %}
-        <a href="{% url 'author_dashboard' %}?status={{ value }}">
-            {{ label }}
+{% block content %}
+<section class="dashboard-page">
+
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">AUTHOR AREA</p>
+            <h1>My Articles</h1>
+            <p class="page-description">
+                Manage your articles, update their content and track their status.
+            </p>
+        </div>
+
+        <a href="{% url 'article_create' %}" class="button">
+            + Write Article
         </a>
-    {% endfor %}
-</nav>
+    </div>
 
-{% for article in articles %}
-    <article>
-        <h2>{{ article.title }}</h2>
-
-        <p>Status: {{ article.get_status_display }}</p>
-        <p>Last updated: {{ article.updated_at }}</p>
-
-        <a href="{% url 'article_update' slug=article.slug %}">
-            Edit Article
+    <nav class="filter-nav">
+        <a href="{% url 'author_dashboard' %}" class="filter-link">
+            All
         </a>
 
-        <a href="{% url 'article_delete' slug=article.slug %}">
-            Delete Article
-        </a>
-
-        {% if article.status == "published" %}
-            <a href="{% url 'article_detail' slug=article.slug %}">
-                View Article
+        {% for value, label in status_choices %}
+            <a href="{% url 'author_dashboard' %}?status={{ value }}"
+               class="filter-link">
+                {{ label }}
             </a>
-        {% endif %}
-    </article>
-{% empty %}
-    <p>You haven't created any articles yet.</p>
-{% endfor %}
+        {% endfor %}
+    </nav>
+
+    <div class="dashboard-articles">
+        {% for article in articles %}
+            <article class="dashboard-card">
+
+                <div class="dashboard-card-heading">
+                    <h2>{{ article.title }}</h2>
+
+                    <span class="status-label status-{{ article.status }}">
+                        {{ article.get_status_display }}
+                    </span>
+                </div>
+
+                <p class="article-updated">
+                    Last updated: {{ article.updated_at|date:"M d, Y · H:i" }}
+                </p>
+
+                <div class="dashboard-actions">
+                    <a href="{% url 'article_update' slug=article.slug %}"
+                       class="button button-small">
+                        Edit
+                    </a>
+
+                    <a href="{% url 'article_delete' slug=article.slug %}"
+                       class="button button-small button-danger">
+                        Delete
+                    </a>
+
+                    {% if article.status == "published" %}
+                        <a href="{% url 'article_detail' slug=article.slug %}"
+                           class="button button-small button-outline">
+                            View Article
+                        </a>
+                    {% endif %}
+                </div>
+
+            </article>
+
+        {% empty %}
+            <div class="empty-state">
+                <h3>No articles found</h3>
+                <p>You haven't created any articles in this section yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</section>
+{% endblock %}

@@ -1,9 +1,42 @@
-<h1>Edit Article</h1>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.media }}
-    {{ form.as_p }}
+{% extends "blog/base.html" %}
 
-    <button type="submit">Save Changes</button>
-</form>
+{% block title %}Edit Article | My Blog{% endblock %}
+
+{% block content %}
+
+<section class="form-page">
+    <div class="form-heading">
+        <p class="eyebrow">AUTHOR WORKSPACE</p>
+        <h1>Edit Your Article</h1>
+        <p>Make changes to your existing article.</p>
+    </div>
+
+    <div class="form-panel">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.media }}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {{ form.as_p }}
+
+            <div class="form-actions">
+                <button class="button button-primary" type="submit">
+                    Save Changes
+                </button>
+
+                <a class="button button-secondary"
+                   href="{% url 'home' %}">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,42 +1,81 @@
-<h1>Comment Moderation</h1>
+{% extends "blog/base.html" %}
 
-{% for comment in comments %}
-    <div>
-        <h3>{{ comment.article.title }}</h3>
+{% block title %}Comment Moderation | My Blog{% endblock %}
 
-        <p>{{ comment.content }}</p>
+{% block content %}
+<section class="moderation-page">
 
-        <small>
-            Submitted by:
-            {% if comment.user %}
-                {{ comment.user.username }}
-            {% else %}
-                Anonymous
-            {% endif %}
-        </small>
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">AUTHOR AREA</p>
+            <h1>Comment Moderation</h1>
+            <p class="page-description">
+                Review submitted comments before they appear on your articles.
+            </p>
+        </div>
+    </div>
 
-        <p>
-            Submitted on: {{ comment.created_at }}
-        </p>
+    <div class="moderation-list">
 
-        <p>
-            Status: {{ comment.get_moderation_status_display }}
-        </p>
-        <form method="post" action="{% url 'moderate_comment' comment.id 'approve' %}">
-            {% csrf_token %}
-            <button type="submit">Approve</button>
-        </form>
+        {% for comment in comments %}
+            <article class="moderation-card">
 
-        <form method="post" action="{% url 'moderate_comment' comment.id 'reject' %}">
-            {% csrf_token %}
-            <button type="submit">Reject</button>
-        </form>
+                <div class="moderation-card-heading">
+                    <h2>{{ comment.article.title }}</h2>
+
+                    <span class="status-label status-pending">
+                        {{ comment.get_moderation_status_display }}
+                    </span>
+                </div>
+
+                <p class="comment-content">{{ comment.content }}</p>
+
+                <div class="comment-meta">
+                    <span>
+                        Submitted by:
+                        {% if comment.user %}
+                            {{ comment.user.username }}
+                        {% else %}
+                            Anonymous
+                        {% endif %}
+                    </span>
+
+                    <span>
+                        {{ comment.created_at|date:"M d, Y · H:i" }}
+                    </span>
+                </div>
+
+                <div class="moderation-actions">
+
+                    <form method="post"
+                          action="{% url 'moderate_comment' comment.id 'approve' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="button button-small">
+                            Approve
+                        </button>
+                    </form>
+
+                    <form method="post"
+                          action="{% url 'moderate_comment' comment.id 'reject' %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="button button-small button-danger">
+                            Reject
+                        </button>
+                    </form>
+
+                </div>
+
+            </article>
+
+        {% empty %}
+            <div class="empty-state">
+                <h3>You're all caught up!</h3>
+                <p>No pending comments to moderate.</p>
+            </div>
+        {% endfor %}
 
     </div>
 
-    <hr>
-
-
-{% empty %}
-    <p>No pending comments to moderate.</p>
-{% endfor %}
+</section>
+{% endblock %}

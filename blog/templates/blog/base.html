@@ -1,0 +1,63 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}My Blog{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'blog/css/style.css' %}">
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container header-content">
+
+            <a class="site-logo" href="{% url 'home' %}">
+                My Blog
+            </a>
+
+            <nav class="main-nav">
+                <a href="{% url 'home' %}">Home</a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'author_dashboard' %}">Dashboard</a>
+                    <a href="{% url 'article_create' %}">Write Article</a>
+                    <a href="{% url 'comment_moderation' %}">Moderation</a>
+                {% endif %}
+
+                <div class="feed-links">
+                    <a href="{% url 'rss_feed' %}">RSS</a>
+                    <a href="{% url 'atom_feed' %}">Atom</a>
+                </div>
+            </nav>
+
+        </div>
+    </header>
+
+    <main class="container main-content">
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; {% now "Y" %} My Blog. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,19 +1,54 @@
-<h1>Create Article</h1>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.media }}
-    {{ form.as_p }}
+{% extends "blog/base.html" %}
 
-    <button type="submit" name="action" value="draft">
-        Save Draft
-    </button>
+{% block title %}Create Article | My Blog{% endblock %}
 
-    <button type="submit" name="action" value="publish">
-        Publish
-    </button>
+{% block content %}
 
-    <button type="submit" name="action" value="schedule">
-        Schedule
-    </button>
-</form>
+<section class="form-page">
+    <div class="form-heading">
+        <p class="eyebrow">AUTHOR WORKSPACE</p>
+        <h1>Create an Article</h1>
+        <p>Write something worth sharing with your readers.</p>
+    </div>
+
+    <div class="form-panel">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.media }}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {{ form.as_p }}
+
+            <div class="form-actions">
+                <button class="button button-secondary"
+                        type="submit"
+                        name="action"
+                        value="draft">
+                    Save Draft
+                </button>
+
+                <button class="button button-primary"
+                        type="submit"
+                        name="action"
+                        value="publish">
+                    Publish Article
+                </button>
+
+                <button class="button button-outline"
+                        type="submit"
+                        name="action"
+                        value="schedule">
+                    Schedule Article
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+{% endblock %}
