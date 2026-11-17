@@ -1,5 +1,5 @@
 
-
+from django.contrib.auth import login
 from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -11,9 +11,27 @@ from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render, get_object_or_404
 
-from .forms import ArticleForm, CommentForm
+from .forms import ArticleForm, CommentForm, SignUpForm
 from .models import Article, AuthorProfile,  Comment, Subscription, Category
 from taggit.models import Tag
+
+class SignUpView(CreateView):
+    form_class=SignUpForm
+    template_name = "registration/signup.html"
+    success_url = reverse_lazy("home")
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("home")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        response=super().form_valid(form)
+        login(self.request, self.object)
+        return response
+
+
+
 
 class ArticleListView(ListView):
     model = Article

@@ -6,7 +6,11 @@ from .feeds import LatestArticlesFeed, LatestArticlesAtomFeed
 
 urlpatterns=[
     path('', views.ArticleListView.as_view(), name='home'),
-
+    path(
+        'account/signup/',
+        views.SignUpView.as_view(),
+        name="signup"
+    ),
     path(
         'article/create/',
         views.ArticleCreateView.as_view(),

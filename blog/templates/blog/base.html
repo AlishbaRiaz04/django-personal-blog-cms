@@ -22,10 +22,22 @@
             <nav class="main-nav">
                 <a href="{% url 'home' %}">Home</a>
 
-                {% if user.is_authenticated %}
+                {% if user.author_profile %}
                     <a href="{% url 'author_dashboard' %}">Dashboard</a>
                     <a href="{% url 'article_create' %}">Write Article</a>
                     <a href="{% url 'comment_moderation' %}">Moderation</a>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                    <span class="nav-user">{{ user.username }}</span>
+
+                    <form class="logout-form" method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-button">Log out</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Log in</a>
+                    <a href="{% url 'signup' %}">Sign up</a>
                 {% endif %}
 
                 <div class="feed-links">

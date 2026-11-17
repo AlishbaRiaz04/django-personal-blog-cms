@@ -141,7 +141,7 @@ class CommentModerationTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/accounts/login/", response.url)
+        self.assertIn(reverse("login"), response.url)
 
         self.comment_one.refresh_from_db()
 

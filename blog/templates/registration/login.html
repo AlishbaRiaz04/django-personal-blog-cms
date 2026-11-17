@@ -1,0 +1,38 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Log in | My Blog{% endblock %}
+
+{% block content %}
+
+<section class="form-page">
+    <div class="form-heading">
+        <p class="eyebrow">WELCOME BACK</p>
+        <h1>Log in</h1>
+        <p>Log in to comment, subscribe to authors and manage your articles.</p>
+    </div>
+
+    <div class="form-panel">
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            {{ form.as_p }}
+
+            <input type="hidden" name="next" value="{{ next }}">
+            <div class="form-actions">
+                <button class="button button button-primary" type="submit">
+                    Log in
+                </button>
+            </div>
+        </form>
+        <p class="auth-switch">
+            New Here?
+            <a href="{% url 'signup' %}">Create an account</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

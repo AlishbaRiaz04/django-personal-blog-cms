@@ -4,7 +4,8 @@ from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from ckeditor.widgets import CKEditorWidget
-
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 from .models import Article
 from .models import Comment
@@ -84,3 +85,15 @@ class CommentForm(forms.ModelForm):
             raise ValidationError("Comment cannot be empty")
 
         return content
+
+class SignUpForm(UserCreationForm):
+    email=forms.EmailField(required=True)
+    class Meta(UserCreationForm.Meta):
+        model=User
+        fields=("username", "email")
+
+    def clean_email(self):
+        email=self.cleaned_data["email"].strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise ValidationError("An account with this email already exists.")
+        return email
