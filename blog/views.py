@@ -2,7 +2,7 @@
 
 from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -47,7 +47,7 @@ class ArticleListView(ListView):
         context["tags"] = Tag.objects.all()
 
         return context
-class ArticleCreateView(LoginRequiredMixin, CreateView):
+class ArticleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model= Article
     form_class=ArticleForm
     template_name = "blog/article_form.html"
@@ -65,10 +65,7 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
         article = form.save(commit=False)
 
         # Assign the logged-in user as the author
-        author, created = AuthorProfile.objects.get_or_create(
-            user=self.request.user
-        )
-        article.author = author
+        article.author = self.request.user.author_profile
 
         # Determine the article's state
         action = form.action
@@ -89,11 +86,10 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
 
         return super().form_valid(form)
 
-    """def get_success_url(self):
-        return reverse(
-            "article_detial",
-            kwargs={"slug": self.object.slug}
-        )"""
+    def test_func(self):
+        return AuthorProfile.objects.filter(
+            user=self.request.user
+        ).exists()
 
     def post(self, request, *args, **kwargs):
         action=request.POST.get("action")
