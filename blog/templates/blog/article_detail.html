@@ -1,93 +1,121 @@
+{% extends "blog/base.html" %}
 
-<h1>{{ article.title }}</h1>
+{% block title %}{{ article.title }} | My Blog{% endblock %}
 
-<p>Published on: {{ article.published_at }}</p>
+{% block content %}
 
-<p>Author: {{ article.author }}</p>
+<article class="article-detail">
 
-{% if article.categories.all %}
-    <div class="article-categories">
-        {% for category in article.categories.all %}
-            <a href="{% url 'home' %}?category={{ category.id }}"
-               class="category-label">
-                {{ category.name }}
-            </a>
-        {% endfor %}
+    <header class="article-header">
+        <h1>{{ article.title }}</h1>
+
+        <div class="article-meta">
+            <span>Published on: {{ article.published_at|date:"M d, Y" }}</span>
+            <span>Author: {{ article.author }}</span>
+        </div>
+
+        {% if article.categories.all %}
+            <div class="article-categories">
+                {% for category in article.categories.all %}
+                    <a href="{% url 'home' %}?category={{ category.id }}"
+                       class="category-label">
+                        {{ category.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if article.tags.all %}
+            <div class="article-tags">
+                <span>Tags:</span>
+
+                {% for tag in article.tags.all %}
+                    <a href="{% url 'home' %}?tag={{ tag.slug }}"
+                       class="tag-label">
+                        {{ tag.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </header>
+
+    {% if user.is_authenticated and article.author %}
+        {% if article.author.user_id != user.id %}
+            <div class="subscription-action">
+                {% if is_subscribed %}
+                    <form method="post" action="{% url 'unsubscribe_from_author' slug=article.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="button button-secondary">Unsubscribe</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{% url 'subscribe_to_author' slug=article.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="button button-primary">Subscribe</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% elif not user.is_authenticated %}
+        <p class="subscription-action">
+            <a href="{% url 'login' %}?next={{ request.path }}">Log in</a>
+            to subscribe to this author.
+        </p>
+    {% endif %}
+
+    {# Safe because content is sanitized before it is saved #}
+    <div class="article-body">
+        {{ article.content|safe }}
     </div>
-{% endif %}
 
-{% if article.tags.all %}
-    <div class="article-tags">
-        <span>Tags:</span>
-
-        {% for tag in article.tags.all %}
-            <a href="{% url 'home' %}?tag={{ tag.slug }}"
-               class="tag-label">
-                {{ tag.name }}
+    {% if user.is_authenticated and article.author and article.author.user_id == user.id %}
+        <p>
+            <a class="button button-small" href="{% url 'article_update' slug=article.slug %}">
+                Edit Article
             </a>
-        {% endfor %}
-    </div>
-{% endif %}
+        </p>
+    {% endif %}
 
-{% if user.is_authenticated and article.author %}
-    {% if article.author.user_id != user.id %}
-        {% if is_subscribed %}
-            <form method="post" action="{% url 'unsubscribe_from_author' slug=article.slug %}">
+    <hr>
+
+    <section class="comments">
+        <h2>Comments</h2>
+
+        {% for comment in approved_comments %}
+            <div class="comment">
+                <p>{{ comment.content }}</p>
+
+                <small>
+                    {% if comment.user %}
+                        {{ comment.user.username }}
+                    {% else %}
+                        Anonymous
+                    {% endif %}
+                    &middot; {{ comment.created_at|date:"M d, Y" }}
+                </small>
+            </div>
+        {% empty %}
+            <p>No comments yet.</p>
+        {% endfor %}
+
+        <hr>
+
+        {% if user.is_authenticated %}
+            <h3>Leave a comment</h3>
+
+            <form method="post">
                 {% csrf_token %}
-                <button type="submit">Unsubscribe</button>
+                {{ comment_form.as_p }}
+
+                <button type="submit" class="button button-primary">Submit comment</button>
             </form>
         {% else %}
-            <form method="post" action="{% url 'subscribe_to_author' slug=article.slug %}">
-                {% csrf_token %}
-                <button type="submit">Subscribe</button>
-            </form>
+            <p>
+                <a href="{% url 'login' %}?next={{ request.path }}">Log in</a>
+                to leave a comment.
+            </p>
         {% endif %}
-    {% endif %}
-{% else %}
-    {% if not user.is_authenticated %}
-        <p>Log in to subscribe to this author.</p>
-    {% endif %}
-{% endif %}
-<div>
-    {{ article.content|safe }}
-</div>
+    </section>
 
-{% if user.is_authenticated and article.author and article.author.user_id == user.id %}
-    <a href="{% url 'article_update' slug=article.slug %}">
-        Edit Article
-    </a>
-{% endif %}
+</article>
 
-<hr>
-<h2>Comments</h2>
-{% for comment in approved_comments %}
-    <div>
-        <p>{{ comment.content }}</p>
-
-        <small>
-            {% if comment.user %}
-                {{ comment.user.username }}
-            {% else %}
-                Anonymous
-            {% endif %}
-            . {{ comment.created_at }}
-        </small>
-    </div>
-{% empty %}
-    <p>No comments yet.</p>
-{% endfor %}
-
-<hr>
-
-{% if user.is_authenticated %}
-    <h3>Leave a comment</h3>
-
-    <form method="post">
-        {% csrf_token %}
-        {{ comment_form.as_p }}
-
-        <button type="submit">Submit comment</button>
-    </form>
-{% else %}
-    <p>Log in to leave a comment.</p>
-{% endif %}
+{% endblock %}
