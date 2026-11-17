@@ -5,3 +5,4 @@ django-js-asset==5.0.0
 django-taggit==7.0.0
 sqlparse==0.6.1
 tzdata==2026.6
+nh3==0.3.7

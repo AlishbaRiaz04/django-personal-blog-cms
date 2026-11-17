@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 
 from .models import Article
 from .models import Comment
+from .sanitizers import sanitize_html
 
 
 class ArticleForm(ModelForm):
@@ -24,7 +25,7 @@ class ArticleForm(ModelForm):
             "content": CKEditorWidget(),
         }
     def clean_content(self):
-        content=self.cleaned_data["content"]
+        content=sanitize_html(self.cleaned_data["content"])
         cleaning=strip_tags(content).strip()
         if not cleaning:
             raise ValidationError("Content cannot be empty")

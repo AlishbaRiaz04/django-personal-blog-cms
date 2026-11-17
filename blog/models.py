@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
 from django.db.models import Q
+from .sanitizers import sanitize_html
 
 from taggit.managers import TaggableManager
 
@@ -52,6 +53,7 @@ class Article(models.Model):
     def save(self, *args, **kwargs):
         if self._state.adding and not self.slug:
             self.slug = self.generate_unique_slug()
+        self.content=sanitize_html(self.content)
 
         super().save(*args, **kwargs)
 
