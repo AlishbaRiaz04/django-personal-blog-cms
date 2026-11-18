@@ -1,4 +1,5 @@
 
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.decorators import login_required
@@ -14,8 +15,18 @@ from django.shortcuts import redirect, render, get_object_or_404
 from .forms import ArticleForm, CommentForm, SignUpForm
 from .models import Article, AuthorProfile,  Comment, Subscription, Category
 from taggit.models import Tag
+from .services import create_article_notifications
+
+ARTICLE_MESSAGES = {
+    "draft": "Saved as a draft.",
+    "publish": "Article published.",
+    "schedule": "Article scheduled.",
+    "edit": "Changes saved.",
+}
+
 
 class SignUpView(CreateView):
+
     form_class=SignUpForm
     template_name = "registration/signup.html"
     success_url = reverse_lazy("home")
@@ -65,6 +76,7 @@ class ArticleListView(ListView):
         context["tags"] = Tag.objects.all()
 
         return context
+
 class ArticleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model= Article
     form_class=ArticleForm
@@ -81,11 +93,7 @@ class ArticleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
     def form_valid(self, form):
         article = form.save(commit=False)
-
-        # Assign the logged-in user as the author
         article.author = self.request.user.author_profile
-
-        # Determine the article's state
         action = form.action
 
         if action == "draft":
@@ -102,7 +110,21 @@ class ArticleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         elif action == "schedule":
             article.status = Article.Status.SCHEDULED
 
-        return super().form_valid(form)
+        response=super().form_valid(form)
+
+        if action =="publish":
+            create_article_notifications(self.object)
+
+        response=super().form_valid(form)
+
+        if action =="publish":
+            create_article_notifications(self.object)
+
+        messages.success(self.request, ARTICLE_MESSAGES[action])
+
+        return response
+
+        return response
 
     def test_func(self):
         return AuthorProfile.objects.filter(
@@ -180,8 +202,52 @@ class ArticleUpdateView(LoginRequiredMixin, UpdateView):
         )
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["action"] = "edit"
+        if self.request.method =="POST":
+            kwargs["action"] = self.request.POST.get("action")
+        else:
+            kwargs["action"] = "edit"
         return kwargs
+
+    def post(self, request, *args, **kwargs):
+        action=request.POST.get("action")
+
+        if action not in ["edit", "draft", "publish", "schedule"]:
+            return HttpResponseBadRequest("Invalid article action.")
+        return super().post(request, *args, **kwargs)
+    def form_valid(self, form):
+        was_published = (
+            self.object.status == Article.Status.PUBLISHED
+        )
+
+        article=form.save(commit=False)
+        action=form.action
+
+        if action == "draft":
+            article.status=Article.Status.DRAFT
+            article.scheduled_at=None
+            article.published_at=None
+
+        elif action=="publish":
+            article.status=Article.Status.PUBLISHED
+            article.scheduled_at=None
+
+            if not was_published or not article.published_at:
+                article.published_at=timezone.now()
+        elif action == "schedule":
+            article.status = Article.Status.SCHEDULED
+            article.published_at=None
+
+        elif action == "edit":
+            if article.status != Article.Status.SCHEDULED:
+                article.scheduled_at=None
+
+        response = super().form_valid(form)
+
+        if action == "publish" and not was_published:
+            create_article_notifications(self.object)
+
+        messages.success(self.request, ARTICLE_MESSAGES[action])
+        return response
 
 class AuthorDashboardView(LoginRequiredMixin, ListView):
     model = Article

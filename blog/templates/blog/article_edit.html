@@ -26,12 +26,53 @@
             {{ form.as_p }}
 
             <div class="form-actions">
-                <button class="button button-primary" type="submit">
-                    Save Changes
-                </button>
+                {% if article.status == "draft" %}
+                    <button class="button button-secondary" type="submit"
+                            name="action" value="draft">
+                        Save Draft
+                    </button>
+
+                    <button class="button button-primary" type="submit"
+                            name="action" value="publish">
+                        Publish Article
+                    </button>
+
+                    <button class="button button-outline" type="submit"
+                            name="action" value="schedule">
+                        Schedule Article
+                    </button>
+
+                {% elif article.status == "scheduled" %}
+                    {# To reschedule: change the date above, then Save Changes #}
+                    <button class="button button-primary" type="submit"
+                            name="action" value="edit">
+                        Save Changes
+                    </button>
+
+                    <button class="button button-secondary" type="submit"
+                            name="action" value="publish">
+                        Publish Now
+                    </button>
+
+                    <button class="button button-outline" type="submit"
+                            name="action" value="draft">
+                        Move to Draft
+                    </button>
+
+                {% else %}
+                    <button class="button button-primary" type="submit"
+                            name="action" value="edit">
+                        Save Changes
+                    </button>
+
+                    <button class="button button-outline" type="submit"
+                            name="action" value="draft">
+                        Unpublish (back to draft)
+                    </button>
+                {% endif %}
 
                 <a class="button button-secondary"
-                   href="{% url 'home' %}">
+                   href="{% url 'author_dashboard' %}">
                     Cancel
                 </a>
             </div>

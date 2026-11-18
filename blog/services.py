@@ -13,6 +13,39 @@ from .models import (
     Subscription,
 )
 
+@transaction.atomic
+def create_article_notifications(article):
+    if article.author is None:
+        return 0
+
+    event, _ = NotificationEvent.objects.get_or_create(
+        article=article,
+        defaults={
+            "article_title":article.title,
+        },
+    )
+    subscriptions=Subscription.objects.filter(
+        author=article.author
+    ).select_related("user")
+    created_count=0
+
+    for subscription in subscriptions:
+        email=subscription.user.email.strip()
+
+        if not email:
+            continue
+
+        _, created=NotificationDelivery.objects.get_or_create(
+            event=event,
+            recipient_email=email,
+            defaults={
+                "user":subscription.user,
+            },
+        )
+        if created:
+            created_count+=1
+
+    return created_count
 
 def publish_due_articles():
     current_time = timezone.now()
@@ -56,33 +89,7 @@ def publish_due_articles():
                 "scheduled_at",
                 "updated_at",
             ])
-
-            event, _ = NotificationEvent.objects.get_or_create(
-                article=article,
-                defaults={
-                    "article_title": article.title,
-                },
-            )
-
-            # Prepare notification deliveries for this author's subscribers.
-            if article.author:
-                subscriptions = Subscription.objects.filter(
-                    author=article.author
-                ).select_related("user")
-
-                for subscription in subscriptions:
-                    email = subscription.user.email.strip()
-
-                    if not email:
-                        continue
-
-                    NotificationDelivery.objects.get_or_create(
-                        event=event,
-                        recipient_email=email,
-                        defaults={
-                            "user": subscription.user,
-                        },
-                    )
+            create_article_notifications(article)
 
             published_count += 1
 

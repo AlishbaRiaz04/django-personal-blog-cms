@@ -17,6 +17,9 @@ class ArticleForm(ModelForm):
         super().__init__(*args, **kwargs)
         self.action=action
 
+        if self.instance.pk and self.instance.status ==Article.Status.PUBLISHED:
+            del self.fields["scheduled_at"]
+
     class Meta:
         model = Article
         fields = ["title", "content", "categories", "tags", "scheduled_at"]
