@@ -724,3 +724,39 @@ a {
 .auth-switch a {
     color: var(--primary);
 }
+
+/* ---------- Dashboard statistics ---------- */
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-label {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.article-stats {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 18px;
+}

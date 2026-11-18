@@ -1,5 +1,8 @@
+from enum import unique
+from functools import total_ordering
 
 from django.contrib import messages
+from django.db.models import Count
 from django.contrib.auth import login
 from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.decorators import login_required
@@ -13,7 +16,7 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render, get_object_or_404
 
 from .forms import ArticleForm, CommentForm, SignUpForm
-from .models import Article, AuthorProfile,  Comment, Subscription, Category
+from .models import Article, AuthorProfile,  Comment, Subscription, Category, PageView
 from taggit.models import Tag
 from .services import create_article_notifications
 
@@ -38,6 +41,7 @@ class SignUpView(CreateView):
 
     def form_valid(self, form):
         response=super().form_valid(form)
+        AuthorProfile.objects.create(user=self.object)
         login(self.request, self.object)
         return response
 
@@ -115,14 +119,7 @@ class ArticleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         if action =="publish":
             create_article_notifications(self.object)
 
-        response=super().form_valid(form)
-
-        if action =="publish":
-            create_article_notifications(self.object)
-
         messages.success(self.request, ARTICLE_MESSAGES[action])
-
-        return response
 
         return response
 
@@ -258,6 +255,9 @@ class AuthorDashboardView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = Article.objects.filter(
             author__user=self.request.user
+        ).annotate(
+            view_count=Count("page_views"),
+            unique_visitors=Count("page_views__visitor_id", distinct=True)
         ).order_by("-updated_at")
 
         status=self.request.GET.get("status")
@@ -274,6 +274,15 @@ class AuthorDashboardView(LoginRequiredMixin, ListView):
         context=super().get_context_data(**kwargs)
         context["selected_status"] = self.request.GET.get("status", "all")
         context["status_choices"] = Article.Status.choices
+
+        totals=PageView.objects.filter(
+            article__author__user=self.request.user
+        ).aggregate(
+            total_views=Count("id"),
+            unique_visitors=Count("visitor_id", distinct=True),
+        )
+        context["total_views"]=totals["total_views"]
+        context["total_unique_visitors"]=totals["unique_visitors"]
 
         return context
 

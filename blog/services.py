@@ -1,10 +1,10 @@
-
 from django.db import transaction
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 from datetime import timedelta
 from django.db.models import Q
+from django.urls import reverse
 
 from .models import (
     Article,
@@ -12,6 +12,19 @@ from .models import (
     NotificationDelivery,
     Subscription,
 )
+
+
+def build_article_url(article):
+    """Full web address of an article, e.g. https://myblog.com/article/my-post/
+
+    Emails are read outside the website, so a relative link like
+    /article/my-post/ would be useless. SITE_URL (in settings.py) is the
+    part before the path.
+    """
+    path = reverse("article_detail", kwargs={"slug": article.slug})
+
+    return settings.SITE_URL.rstrip("/") + path
+
 
 @transaction.atomic
 def create_article_notifications(article):
@@ -109,13 +122,26 @@ def send_notification_email(delivery):
         and delivery.last_attempt_at> current_time -timedelta(minutes=5)
     ):
         return delivery.status
-    subject=f"new article: {delivery.event.article_title}"
+    subject=f"New article: {delivery.event.article_title}"
 
-    message=(
-        f"A new article has been published!\n\n"
-        f"Title: {delivery.event.article_title}\n\n"
-        "Visit the blog to read it."
-    )
+    lines=[
+        "A new article has been published!",
+        "",
+        f"Title: {delivery.event.article_title}",
+    ]
+
+    # The article may have been deleted since the notification was queued.
+    article=delivery.event.article
+
+    if article is not None:
+        lines += [
+            f"Read it here: {build_article_url(article)}",
+            "",
+            "You are receiving this because you subscribed to this author.",
+            "To stop these emails, log in, open the article and click Unsubscribe.",
+        ]
+
+    message="\n".join(lines)
     try:
         sent_count=send_mail(
             subject=subject,

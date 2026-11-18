@@ -124,19 +124,21 @@ class SignUpTests(TestCase):
         user = User.objects.get(username="newuser")
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)
 
-    def test_signup_does_not_make_the_user_an_author(self):
+    def test_signup_automatically_creates_an_author_profile(self):
         self.client.post(self.url, self.valid_data)
 
-        self.assertFalse(
-            AuthorProfile.objects.filter(user__username="newuser").exists()
+        user = User.objects.get(username="newuser")
+
+        self.assertTrue(
+            AuthorProfile.objects.filter(user=user).exists()
         )
 
-    def test_new_user_cannot_open_article_creation_page(self):
+    def test_new_user_can_open_article_creation_page(self):
         self.client.post(self.url, self.valid_data)
 
         response = self.client.get(reverse("article_create"))
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
     def test_mismatched_passwords_do_not_create_a_user(self):
         data = {**self.valid_data, "password2": "something-else-123"}

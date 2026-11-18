@@ -19,6 +19,16 @@
         </a>
     </div>
 
+    <div class="stats_row">
+        <span class="stat-number">{{ total_views }}</span>
+        <span class="stat-label">Total article views</span>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-number">{{ total_unique_visitors }}</span>
+        <span class="stat-label">Unique visitors</span>
+    </div>
+
     <nav class="filter-nav">
         <a href="{% url 'author_dashboard' %}" class="filter-link">
             All
@@ -47,6 +57,16 @@
                 <p class="article-updated">
                     Last updated: {{ article.updated_at|date:"M d, Y · H:i" }}
                 </p>
+
+                <div class="article-stats">
+                    <span>
+                        {{ article.view_count }} view{{ article.view_count|pluralize }}
+                    </span>
+
+                    <span>
+                        {{ article.unique_visitors }} unique visitor{{ article.unique_visitors|pluralize }}
+                    </span>
+                </div>
 
                 <div class="dashboard-actions">
                     <a href="{% url 'article_update' slug=article.slug %}"
