@@ -2,7 +2,7 @@ from enum import unique
 from functools import total_ordering
 
 from django.contrib import messages
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.contrib.auth import login
 from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.decorators import login_required
@@ -141,9 +141,20 @@ class ArticleDetailView(DetailView):
     context_object_name = "article"
 
     def get_queryset(self):
+        user=self.request.user
+
+        if user.is_authenticated:
+            if user.is_staff:
+                return Article.objects.all()
+
+            return Article.objects.filter(
+                Q(status=Article.Status.PUBLISHED) |
+                Q(author__user=user)
+            )
         return Article.objects.filter(
             status=Article.Status.PUBLISHED
         )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 

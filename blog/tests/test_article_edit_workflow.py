@@ -87,6 +87,23 @@ class PublishFromEditPageTests(EditWorkflowTestCase):
         article.refresh_from_db()
         self.assertEqual(article.status, Article.Status.DRAFT)
 
+    def test_publishing_notifies_subscribers(self):
+        reader = User.objects.create_user(
+            username="reader",
+            email="reader@example.com",
+            password="x-pass-12345",
+        )
+
+        Subscription.objects.create(
+            user=reader,
+            author=self.profile,
+        )
+
+        article = self.make_article()
+
+        self.submit(article, "publish")
+
+        self.assertEqual(NotificationEvent.objects.count(), 1)
 
 class ScheduleFromEditPageTests(EditWorkflowTestCase):
     def test_draft_can_be_scheduled(self):
@@ -167,6 +184,33 @@ class ScheduleFromEditPageTests(EditWorkflowTestCase):
         self.submit(article, "schedule", scheduled_at=self.future())
 
         self.assertEqual(NotificationEvent.objects.count(), 0)
+
+    def test_schedule_article_cannnot_be_rescheduled_to_past(self):
+        original_time=timezone.now() + timedelta(days=2)
+
+        article=self.make_article(
+            Article.Status.SCHEDULED,
+            scheduled_at=original_time,
+        )
+        past_time=(
+            timezone.now() - timedelta(days=1)
+        ).strftime("%Y-%m-%dT%H:%M")
+        response=self.submit(
+            article,
+            "edit",
+            scheduled_at=past_time,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Scheduled time must be in the future.",
+        )
+
+        article.refresh_from_db()
+
+        self.assertEqual(article.status, Article.Status.SCHEDULED)
+        self.assertEqual(article.scheduled_at, original_time)
+
 
 
 class UnpublishTests(EditWorkflowTestCase):
