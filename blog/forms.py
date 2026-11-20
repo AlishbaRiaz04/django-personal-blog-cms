@@ -3,7 +3,7 @@ from django.forms import ModelForm
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from ckeditor.widgets import CKEditorWidget
+from django_ckeditor_5.widgets import CKEditor5Widget
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -25,7 +25,11 @@ class ArticleForm(ModelForm):
         fields = ["title", "content", "categories", "tags", "scheduled_at"]
 
         widgets={
-            "content": CKEditorWidget(),
+            "content": CKEditor5Widget(
+                attrs={"class": "django_ckeditor_5"},
+                config_name="default",
+
+            ),
         }
     def clean_content(self):
         content=sanitize_html(self.cleaned_data["content"])

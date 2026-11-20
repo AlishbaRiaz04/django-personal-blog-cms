@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     #third-party apps
     'taggit',
-    'ckeditor',
+    'django_ckeditor_5',
     #apps
     'blog',
 
@@ -144,3 +144,25 @@ LOGIN_REDIRECT_URL="home"
 LOGOUT_REDIRECT_URL="home"
 
 SITE_URL = "http://127.0.0.1:8000"
+
+CKEDITOR_5_CONFIGS={
+    "default":{
+        "toolbar":{
+            "items":[
+                "heading",
+                "|",
+                "bold",
+                "italic",
+                "underline",
+                "link",
+                "|",
+                "bulletedList",
+                "numberedList",
+                "|",
+                "blockQuote",
+                "undo",
+                "redo",
+            ],
+        },
+    },
+}

@@ -10,6 +10,7 @@ urlpatterns=[
     path('admin/', admin.site.urls),
     path('accounts/', include("django.contrib.auth.urls")),
     path('', include('blog.urls')),
+    path("ckeditor5/", include("django_ckeditor_5.urls")),
     path(
         "sitemap.xml",
         sitemap,
