@@ -7,7 +7,6 @@ from django.utils import timezone
 from blog.models import (
     Article,
     AuthorProfile,
-    Category,
     NotificationDelivery,
     Subscription,
 )

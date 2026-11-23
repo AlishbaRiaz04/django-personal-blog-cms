@@ -6,7 +6,7 @@ A Django-based personal blog and content management system. It supports article 
 
 - **Article management:** Create, edit, and delete articles.
 - **Article statuses:** Save articles as drafts, publish them immediately, or schedule them for later publication.
-- **Rich-text content:** Use CKEditor for article content.
+- **Rich-text content:** Use CKEditor 5 for article content.
 - **Author management:** Associate articles with author profiles and provide an author dashboard.
 - **Categories and tags:** Organize articles and filter the public article list.
 - **Comments:** Allow authenticated users to submit comments and provide a moderation workflow.
@@ -23,15 +23,16 @@ A Django-based personal blog and content management system. It supports article 
 - Python
 - Django 6.1.3
 - SQLite
-- django-ckeditor
+- django-ckeditor-5
 - django-taggit
 - nh3
+- python-dotenv
 - HTML and CSS
 
 ## Project Structure
 
 ```text
-django_projects/
+django-personal-blog-cms/
 ├── blog/
 │   ├── management/
 │   │   └── commands/
@@ -59,7 +60,7 @@ django_projects/
 │   └── wsgi.py
 ├── manage.py
 ├── requirements.txt
-└── db.sqlite3
+└── README.md
 ```
 
 ## Installation and Setup
@@ -86,19 +87,36 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 4. Apply database migrations
+### 4. Configure environment variables
+
+Create a `.env` file in the project root, alongside `manage.py`.
+
+Add the following variables:
+
+```dotenv
+SECRET_KEY=your-generated-secret-key
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+SITE_URL=http://127.0.0.1:8000
+```
+
+Generate a new Django secret key for your local environment. Keep the `.env` file private and do not commit it to version control.
+
+The project uses `python-dotenv` to load environment variables from this file.
+
+### 5. Apply database migrations
 
 ```powershell
 python manage.py migrate
 ```
 
-### 5. Create an administrator account
+### 6. Create an administrator account
 
 ```powershell
 python manage.py createsuperuser
 ```
 
-### 6. Start the development server
+### 7. Start the development server
 
 ```powershell
 python manage.py runserver
@@ -107,6 +125,37 @@ python manage.py runserver
 Open `http://127.0.0.1:8000/` in your browser.
 
 The Django administration panel is available at `http://127.0.0.1:8000/admin/`.
+
+## Email Configuration
+
+### Development email backend
+
+The development environment uses Django's console email backend.
+
+Emails are printed in the terminal where the development server or management command is running. They are not sent to real email addresses.
+
+### Testing email locally
+
+To test the email configuration, open the Django shell:
+
+```powershell
+python manage.py shell
+```
+
+Then execute:
+
+```python
+from django.core.mail import send_mail
+
+send_mail(
+    "Test email",
+    "This is a development email test.",
+    None,
+    ["test@example.com"],
+)
+```
+
+The email content should appear in the terminal. No real email is sent.
 
 ## Running Tests
 

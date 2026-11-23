@@ -197,14 +197,14 @@ class CommentModerationTests(TestCase):
         )
 
     def test_only_approved_comments_are_visible(self):
-        approved_comment = Comment.objects.create(
+        Comment.objects.create(
             article=self.article_one,
             user=self.author_two,
             content="This comment should be visible",
             moderation_status=Comment.ModerationStatus.APPROVED
         )
 
-        rejected_comment = Comment.objects.create(
+        Comment.objects.create(
             article=self.article_one,
             user=self.author_two,
             content="This comment should stay hidden",

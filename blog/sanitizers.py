@@ -1,5 +1,4 @@
 import nh3
-from nh3.nh3 import ALLOWED_TAGS, ALLOWED_ATTRIBUTES
 
 ALLOWED_TAGS={
     "a", "abbr", "b", "blockquote", "br", "code", "div", "em",

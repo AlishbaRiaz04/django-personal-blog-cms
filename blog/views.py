@@ -1,6 +1,6 @@
-from enum import unique
-from functools import total_ordering
+from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import Count, Q
 from django.contrib.auth import login
@@ -11,9 +11,9 @@ from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DetailView, UpdateView, ListView, DeleteView
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.http import HttpResponseBadRequest
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404
 
 from .forms import ArticleForm, CommentForm, SignUpForm
 from .models import Article, AuthorProfile,  Comment, Subscription, Category, PageView
@@ -172,12 +172,30 @@ class ArticleDetailView(DetailView):
             ).exists()
 
         return context
+    @staticmethod
+    def comment_rate_limit_reached(user):
+        limit = getattr(settings, "COMMENT_RATE_LIMIT", 5)
+        window = getattr(settings, "COMMENT_RATE_WINDOW_SECONDS", 600)
+        since = timezone.now() - timedelta(seconds=window)
+
+        return Comment.objects.filter(
+            user=user,
+            created_at__gte=since,
+        ).count() >= limit
+
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect_to_login(request.get_full_path())
 
         self.object = self.get_object()
         form = CommentForm(request.POST)
+
+        if self.comment_rate_limit_reached(request.user):
+            context = self.get_context_data()
+            context["comment_form"] = form
+            context["comment_rate_limited"] = True
+
+            return self.render_to_response(context, status=429)
 
         if form.is_valid():
             comment = form.save(commit=False)
