@@ -336,6 +336,31 @@ a {
     max-width: 100%;
     height: auto;
 }
+.article-body {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.article-body img,
+.article-body video,
+.article-body iframe {
+    max-width: 100%;
+}
+
+.article-body table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.article-body pre {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.article-body code {
+    overflow-wrap: anywhere;
+}
 
 .article-body h2,
 .article-body h3 {
